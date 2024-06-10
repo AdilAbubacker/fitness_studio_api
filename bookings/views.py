@@ -1,5 +1,4 @@
 # bookings/views.py
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,7 +12,7 @@ import pytz
 
 from classes.models import ClassSession
 from .models import Booking
-from .serializers import BookingListSerializer
+from .serializers import BookingListSerializer, BookingCreateSerializer
 
 
 class BookingView(APIView):
@@ -46,24 +45,20 @@ class BookingView(APIView):
 
         # 3. Query the Booking model (case‐insensitive)
         bookings_qs = Booking.objects.filter(client_email__iexact=email).order_by("-booked_at")
-        serializer = BookingListSerializer(bookings_qs, many=True, context={"user_tz": user_tz, 'm':email})
+        serializer = BookingListSerializer(bookings_qs, many=True, context={"user_tz": user_tz})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
     def post(self, request, *args, **kwargs):
-        data = request.data
-        session_id     = data.get("session_id")
-        client_name    = data.get("client_name")
-        client_email   = data.get("client_email")
+        serializer = BookingCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. input validation
-        if not all([session_id, client_name, client_email]):
-            return Response(
-                {"detail": "session_id, client_name and client_email are required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        session_id = serializer.validated_data["session_id"]
+        client_name = serializer.validated_data["client_name"]
+        client_email = serializer.validated_data["client_email"]
 
-        # 2. Fast-fail checks
+        # Fast-fail checks
         try:
             session = ClassSession.objects.get(pk=session_id)
         except ClassSession.DoesNotExist:
@@ -78,18 +73,19 @@ class BookingView(APIView):
         if session.available_slots <= 0:
             return Response({"detail": "Session is fully booked."}, status=status.HTTP_400_BAD_REQUEST)
         
-        # 3. decrement + insert in transaction
+        # decrement + insert in transaction
         try:
-            with transaction.atomic():
-                
-                ClassSession.objects.filter(id=session_id).update(available_slots=F("available_slots") - 1)
-                
+            with transaction.atomic(): 
                 # create booking
                 booking = Booking.objects.create(
                     session_id=session_id,
                     client_name=client_name,
                     client_email=client_email
                 )
+                
+                # decrement qty
+                ClassSession.objects.filter(id=session_id).update(available_slots=F("available_slots") - 1)
+                
 
         except IntegrityError as e:
             msg = str(e).lower()

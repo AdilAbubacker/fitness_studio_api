@@ -7,6 +7,10 @@ from .models import Booking
 from django.conf import settings
 import pytz
 
+class BookingCreateSerializer(serializers.Serializer):
+    session_id = serializers.IntegerField()
+    client_name = serializers.CharField()
+    client_email = serializers.EmailField()  
 
 class BookingListSerializer(serializers.ModelSerializer):
     session_datetime = serializers.SerializerMethodField()
@@ -19,7 +23,6 @@ class BookingListSerializer(serializers.ModelSerializer):
             "id",
             "client_name",
             "client_email",
-            "booked_at",
             "session_datetime",
             "instructor",
             "class_type",
@@ -41,5 +44,3 @@ class BookingListSerializer(serializers.ModelSerializer):
 
     def get_class_type(self, obj):
         return obj.session.instructor.class_type.name
-
-
