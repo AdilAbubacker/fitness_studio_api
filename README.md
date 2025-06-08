@@ -24,6 +24,14 @@ A timezone-aware, concurrency-safe class booking system built with Django + Djan
 
 ---
 
+## 🧪 Postman Collection
+
+Import this in Postman to test all endpoints:
+
+👉 [`booking_api_postman_collection.json`](./postman/postman_collection.json)
+
+---
+
 ## 🚀 Getting Started
 
 ```bash
