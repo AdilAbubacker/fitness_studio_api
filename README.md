@@ -1,6 +1,6 @@
-# 🧘 Django Booking API (BookMyShow for Classes)
+# 🧘 Fitness Studio Booking API
 
-A timezone-aware, concurrency-safe class booking system built with Django + Django REST Framework. Users can browse sessions (e.g. Yoga, Zumba), view instructors, and book available time slots without worrying about double-booking or timezone mismatches.
+A timezone-aware, concurrency-safe class booking system built with Django + Django REST Framework. Users can browse sessions (e.g. Yoga, Zumba), view instructors, and book available time slots without worrying about over-booking or timezone mismatches.
 
 ---
 
