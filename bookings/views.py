@@ -81,6 +81,7 @@ class BookingView(APIView):
         # 3. decrement + insert in transaction
         try:
             with transaction.atomic():
+                
                 ClassSession.objects.filter(id=session_id).update(available_slots=F("available_slots") - 1)
                 
                 # create booking

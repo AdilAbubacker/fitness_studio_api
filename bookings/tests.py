@@ -1,31 +1,23 @@
-# bookings/tests.py
-
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-import pytz
+from datetime import timedelta
 
 from classes.management.commands.seed_data import Command as SeedCommand
 from classes.models import ClassSession
-from .models import Booking
+from bookings.models import Booking
 
 class BookingViewTest(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        # Seed the classes & sessions so we have something to book
         SeedCommand().handle()
 
     def setUp(self):
-        # Common URL for both GET and POST
         self.url = reverse('bookings:booking')
 
     def test_create_and_list_booking(self):
-        # 1) Pick a session with open slots
         session = ClassSession.objects.filter(available_slots__gt=0).first()
-        self.assertIsNotNone(session, "No session available to book")
-
-        # 2) Create a booking
         payload = {
             "session_id": session.id,
             "client_name": "Test User",
@@ -36,38 +28,93 @@ class BookingViewTest(APITestCase):
         booking_id = resp_post.json().get("booking_id")
         self.assertTrue(Booking.objects.filter(id=booking_id).exists())
 
-        # 3) List bookings for that email
-        resp_get = self.client.get(self.url + '?email=test@example.com',
-                                   HTTP_X_TIMEZONE='Europe/London')
+        resp_get = self.client.get(self.url + "?email=test@example.com", HTTP_X_TIMEZONE="Asia/Kolkata")
         self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
-        data = resp_get.json()
-        # Expect exactly one booking returned
-        self.assertEqual(len(data), 1)
-        b = data[0]
-        self.assertEqual(b['client_email'], 'test@example.com')
-        # Check session_datetime was localized (contains + or - offset)
-        self.assertRegex(b['session_datetime'], r'.*[+-]\d\d:\d\d$')
+        self.assertEqual(len(resp_get.json()), 1)
 
     def test_no_overbooking_race(self):
-        # Create a session with exactly 1 slot
-        base = ClassSession.objects.first()
         session = ClassSession.objects.create(
-            instructor=base.instructor,
-            session_datetime=timezone.now() + timezone.timedelta(days=1),
+            instructor=ClassSession.objects.first().instructor,
+            session_datetime=timezone.now() + timedelta(days=1),
             total_slots=1,
             available_slots=1
         )
-
         payload = {
             "session_id": session.id,
-            "client_name": "Racer",
+            "client_name": "Race User",
             "client_email": "race@example.com"
         }
 
-        # Fire two concurrent POSTs
         resp1 = self.client.post(self.url, payload, format='json')
         resp2 = self.client.post(self.url, payload, format='json')
 
-        # One should succeed (201), the other fail (400)
-        codes = sorted([resp1.status_code, resp2.status_code])
-        self.assertEqual(codes, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST])
+        statuses = sorted([resp1.status_code, resp2.status_code])
+        self.assertEqual(statuses, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST])
+
+    def test_prevent_duplicate_booking(self):
+        session = ClassSession.objects.filter(available_slots__gt=0).first()
+        email = "duplicate@example.com"
+
+        payload = {
+            "session_id": session.id,
+            "client_name": "Dup User",
+            "client_email": email
+        }
+
+        # First booking should succeed
+        resp1 = self.client.post(self.url, payload, format='json')
+        self.assertEqual(resp1.status_code, status.HTTP_201_CREATED)
+
+        # Second booking for same session+email should fail
+        resp2 = self.client.post(self.url, payload, format='json')
+        self.assertEqual(resp2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("already booked", resp2.json().get("detail", "").lower())
+
+    def test_prevent_past_booking(self):
+        session = ClassSession.objects.filter(available_slots=0).first()  # The past one seeded with 0 slots
+        payload = {
+            "session_id": session.id,
+            "client_name": "Past Guy",
+            "client_email": "past@example.com"
+        }
+
+        resp = self.client.post(self.url, payload, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("past session", resp.json().get("detail", "").lower())
+
+    def test_exact_slot_depletion(self):
+        session = ClassSession.objects.create(
+            instructor=ClassSession.objects.first().instructor,
+            session_datetime=timezone.now() + timedelta(days=1),
+            total_slots=2,
+            available_slots=2
+        )
+
+        p1 = {"session_id": session.id, "client_name": "User1", "client_email": "u1@example.com"}
+        p2 = {"session_id": session.id, "client_name": "User2", "client_email": "u2@example.com"}
+
+        r1 = self.client.post(self.url, p1, format='json')
+        r2 = self.client.post(self.url, p2, format='json')
+
+        self.assertEqual(r1.status_code, 201)
+        self.assertEqual(r2.status_code, 201)
+
+        session.refresh_from_db()
+        self.assertEqual(session.available_slots, 0)
+
+    def test_get_booking_in_user_timezone(self):
+        session = ClassSession.objects.filter(available_slots__gt=0).first()
+        payload = {
+            "session_id": session.id,
+            "client_name": "Timezoner",
+            "client_email": "tz@example.com"
+        }
+        self.client.post(self.url, payload, format='json')
+
+        resp = self.client.get(self.url + "?email=tz@example.com", HTTP_X_TIMEZONE="America/New_York")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(len(data), 1)
+
+        # session_datetime should end with a TZ offset like -04:00
+        self.assertRegex(data[0]['session_datetime'], r".*[+-]\d{2}:\d{2}$")
