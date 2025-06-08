@@ -75,24 +75,25 @@ class BookingView(APIView):
         if Booking.objects.filter(session=session, client_email=client_email).exists():
             return Response({"detail": "You have already booked this session."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 3. Atomic decrement + insert
+        if session.available_slots <= 0:
+            return Response({"detail": "Session is fully booked."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 3. decrement + insert in transaction
         try:
             with transaction.atomic():
-                updated = (
-                    ClassSession.objects.filter(id=session_id, available_slots__gt=0)
-                    .update(available_slots=F("available_slots") - 1)
-                )
-                if updated == 0:
-                    return Response({"detail": "Session is fully booked."}, status=status.HTTP_400_BAD_REQUEST)
-
-                # create booking (unique_together prevents dupes)
+                ClassSession.objects.filter(id=session_id).update(available_slots=F("available_slots") - 1)
+                
+                # create booking
                 booking = Booking.objects.create(
                     session_id=session_id,
                     client_name=client_name,
                     client_email=client_email
                 )
 
-        except IntegrityError:
-            return Response({"detail": "Could not create booking (database constraint)."},status=status.HTTP_400_BAD_REQUEST)
-
+        except IntegrityError as e:
+            msg = str(e).lower()
+            if "available_slots_non_negative" in msg:
+                return Response({"detail": "Session is fully booked."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({"detail": "Booking failed: " + msg}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Booking successful!", "booking_id": booking.id}, status=status.HTTP_201_CREATED)

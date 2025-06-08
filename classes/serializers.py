@@ -11,9 +11,11 @@ class ClassTypeSerializer(serializers.ModelSerializer):
 
 
 class InstructorSerializer(serializers.ModelSerializer):
+    class_type = serializers.CharField(source="class_type.name", read_only=True)
+
     class Meta:
         model = Instructor
-        fields = ["id", "name"]
+        fields = ["id", "name", "class_type"]
 
 
 class ClassSessionByDateSerializer(serializers.ModelSerializer):

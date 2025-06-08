@@ -2,7 +2,8 @@
 
 from django.core.management.base import BaseCommand
 from classes.models import ClassType, Instructor, ClassSession
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 import pytz
 
 class Command(BaseCommand):
@@ -26,55 +27,42 @@ class Command(BaseCommand):
         bob = Instructor.objects.create(name="Bob", class_type=zumba)
         charlie = Instructor.objects.create(name="Charlie", class_type=hiit)
 
-        # 3. Create Sessions (some in the past, some in the future)
+        # 3. Create Sessions (some past, some future) in IST
         ist = pytz.timezone("Asia/Kolkata")
+        now_ist = timezone.localtime(timezone.now(), ist)
 
-        # -- Create 1 past session for Alice (yesterday at 08:00 IST) --
-        aware_ist_now = datetime.now(ist)  # IST‐aware “now”
-        aware_ist_yesterday = aware_ist_now - timedelta(days=1)
-        naive_ist_yesterday = aware_ist_yesterday.replace(tzinfo=None)
-        past_naive = naive_ist_yesterday.replace(hour=8, minute=0, second=0, microsecond=0)
-        past_ist = ist.localize(past_naive)
-
+        # -- 1 Past session for Alice (yesterday at 08:00 IST)
+        past_ist = (now_ist - timedelta(days=1)).replace(hour=8, minute=0, second=0, microsecond=0)
         ClassSession.objects.create(
             instructor=alice,
             session_datetime=past_ist,
             total_slots=20,
-            available_slots=0,  # Assume it was sold out
+            available_slots=0,
         )
 
-        # -- Create 3 future days of sessions for each instructor --
-        for i in range(3):
-            # Future date in IST:
-            future_ist_dt = (aware_ist_now + timedelta(days=i)).replace(
-                hour=8, minute=0, second=0, microsecond=0, tzinfo=None
-            )
-            future_ist_dt = ist.localize(future_ist_dt)
+        # -- Future sessions for next 3 days --
+        for i in range(1, 4):
+            day_ist = now_ist + timedelta(days=i)
+
+            alice_dt = day_ist.replace(hour=8, minute=0, second=0, microsecond=0)
+            bob_dt = day_ist.replace(hour=10, minute=0, second=0, microsecond=0)
+            charlie_dt = day_ist.replace(hour=12, minute=0, second=0, microsecond=0)
+
             ClassSession.objects.create(
                 instructor=alice,
-                session_datetime=future_ist_dt,
+                session_datetime=alice_dt,
                 total_slots=20,
                 available_slots=20,
             )
-
-            future_ist_dt_bob = (aware_ist_now + timedelta(days=i)).replace(
-                hour=10, minute=0, second=0, microsecond=0, tzinfo=None
-            )
-            future_ist_dt_bob = ist.localize(future_ist_dt_bob)
             ClassSession.objects.create(
                 instructor=bob,
-                session_datetime=future_ist_dt_bob,
+                session_datetime=bob_dt,
                 total_slots=15,
                 available_slots=15,
             )
-
-            future_ist_dt_charlie = (aware_ist_now + timedelta(days=i)).replace(
-                hour=12, minute=0, second=0, microsecond=0, tzinfo=None
-            )
-            future_ist_dt_charlie = ist.localize(future_ist_dt_charlie)
             ClassSession.objects.create(
                 instructor=charlie,
-                session_datetime=future_ist_dt_charlie,
+                session_datetime=charlie_dt,
                 total_slots=25,
                 available_slots=25,
             )

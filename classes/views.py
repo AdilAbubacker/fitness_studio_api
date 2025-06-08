@@ -20,6 +20,11 @@ class InstructorListByTypeView(generics.ListAPIView):
     serializer_class = InstructorSerializer
 
     def get_queryset(self):
+        """
+        GET /api/classes/instructors/
+
+        Return all instructors with query param: ?class_type_id=<int> class_type_id.
+        """
         class_type_id = self.request.query_params.get("class_type_id")
         if not class_type_id:
             raise ParseError(detail="Missing required query param: class_type_id")
@@ -37,11 +42,8 @@ class SessionDatesByInstructorView(APIView):
     """
     GET /api/classes/session-dates/?instructor_id=<int>
     
-    Returns a JSON array of unique dates (YYYY-MM-DD) on which the given instructor
-    has upcoming sessions. Past dates are excluded. All dates are computed
-    in the user's timezone (from X-Timezone header, defaulting to settings.TIME_ZONE).
-from rest_framework.views import APIView
-from rest_framework.response import Response
+    Returns a JSON array of unique dates (YYYY-MM-DD) in the user's timezone 
+    on which the given instructor has upcoming sessions. Header will include X-Timezone.
     """
 
     def get(self, request, *args, **kwargs):
@@ -94,10 +96,6 @@ from rest_framework.response import Response
 
 
 
-# classes/views.py
-
-
-
 class SessionListByInstructorDateView(APIView):
     """
     GET /api/classes/sessions/?instructor_id=<int>&date=YYYY-MM-DD
@@ -105,25 +103,7 @@ class SessionListByInstructorDateView(APIView):
     Returns all sessions (time slots) for the given instructor and date,
     converting times into the user's timezone. If a session_datetime (in UTC)
     falls within [start_of_day_in_UTC, end_of_day_in_UTC], we include it.
-
-    Query Params:
-      - instructor_id (required)
-      - date (required, format: YYYY-MM-DD)
-
-    Header:
-      - X-Timezone: e.g. "America/New_York" (optional; defaults to settings.TIME_ZONE)
-
-    Response: JSON array of objects:
-      [
-        {
-          "id": 5,
-          "session_time": "2025-06-10T08:00:00-04:00",
-          "total_slots": 20,
-          "available_slots": 3,
-          "status": "Filling Fast"
-        },
-        ...
-      ]
+    
     """
 
     def get(self, request, *args, **kwargs):
