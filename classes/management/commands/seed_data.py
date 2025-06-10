@@ -41,7 +41,7 @@ class Command(BaseCommand):
         )
 
         # -- Future sessions for next 3 days --
-        for i in range(1, 4):
+        for i in range(3):
             day_ist = now_ist + timedelta(days=i)
 
             alice_dt = day_ist.replace(hour=8, minute=0, second=0, microsecond=0)

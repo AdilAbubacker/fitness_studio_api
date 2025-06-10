@@ -11,11 +11,7 @@ class ClassType(models.Model):
 
 class Instructor(models.Model):
     name = models.CharField(max_length=100)
-    class_type = models.ForeignKey(
-        ClassType, 
-        on_delete=models.CASCADE, 
-        related_name='instructors'
-        )
+    class_type = models.ForeignKey(ClassType, on_delete=models.CASCADE,  related_name='instructors')
 
     def __str__(self):
         return f"{self.name} ({self.class_type.name})"

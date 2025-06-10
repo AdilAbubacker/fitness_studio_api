@@ -27,8 +27,6 @@ class ClassSessionByDateSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "session_time",
-            "total_slots",
-            "available_slots",
             "availability_status",
         ]
 

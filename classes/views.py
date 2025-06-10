@@ -44,6 +44,7 @@ class SessionDatesByInstructorView(APIView):
     
     Returns a JSON array of unique dates (YYYY-MM-DD) in the user's timezone 
     on which the given instructor has upcoming sessions. Header will include X-Timezone.
+
     """
 
     def get(self, request, *args, **kwargs):
@@ -91,7 +92,6 @@ class SessionDatesByInstructorView(APIView):
         # 6. Sort and serialize dates as strings
         sorted_dates = sorted(unique_dates)
         date_list = [d.isoformat() for d in sorted_dates]
-
         return Response(date_list, status=status.HTTP_200_OK)
 
 
@@ -103,7 +103,7 @@ class SessionListByInstructorDateView(APIView):
     Returns all sessions (time slots) for the given instructor and date,
     converting times into the user's timezone. If a session_datetime (in UTC)
     falls within [start_of_day_in_UTC, end_of_day_in_UTC], we include it.
-    
+
     """
 
     def get(self, request, *args, **kwargs):
@@ -128,7 +128,7 @@ class SessionListByInstructorDateView(APIView):
 
         # 3. Determine user's timezone from X-Timezone header (else default)
         tz_header = request.headers.get("X-Timezone", None)
-        if tz_header:
+        if tz_header: 
             try:
                 user_tz = pytz.timezone(tz_header)
             except Exception:
@@ -165,7 +165,6 @@ class SessionListByInstructorDateView(APIView):
             session_datetime__gte=start_utc,
             session_datetime__lte=end_utc,
         ).order_by("session_datetime")
-
 
         # 7. Serialize, passing user_tz in context
         serializer = ClassSessionByDateSerializer(sessions_qs, many=True, context={"user_tz": user_tz})

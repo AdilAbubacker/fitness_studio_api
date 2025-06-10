@@ -1,0 +1,235 @@
+{
+	"info": {
+		"_postman_id": "3eee9623-e973-4f3d-95a0-6b2bba4c55ed",
+		"name": "Fitness Studio API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45683197",
+		"_collection_link": "https://adil-8171500.postman.co/workspace/adil's-Workspace~b6913eb3-0bed-4717-80af-409d03cede7e/collection/45683197-3eee9623-e973-4f3d-95a0-6b2bba4c55ed?action=share&source=collection_link&creator=45683197"
+	},
+	"item": [
+		{
+			"name": "Get Class Types",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/classes/class-types/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"classes",
+						"class-types",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Instructors by ClassType",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/classes/instructors/?class_type_id=1\n",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"classes",
+						"instructors",
+						""
+					],
+					"query": [
+						{
+							"key": "class_type_id",
+							"value": "1\n"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Instructor Dates",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-Timezone",
+						"value": "America/New_York",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "X-Timezone",
+						"value": "Asia/Kolkata",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/classes/session-dates/?instructor_id=1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"classes",
+						"session-dates",
+						""
+					],
+					"query": [
+						{
+							"key": "instructor_id",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Sessions by Date",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-Timezone",
+						"value": "Asia/Kolkata",
+						"type": "text"
+					},
+					{
+						"key": "X-Timezone",
+						"value": "America/New_York",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/classes/sessions/?instructor_id=1&date=2025-06-12\n",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"classes",
+						"sessions",
+						""
+					],
+					"query": [
+						{
+							"key": "instructor_id",
+							"value": "1"
+						},
+						{
+							"key": "date",
+							"value": "2025-06-12\n"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Book Session",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"session_id\": 8,\r\n  \"client_name\": \"Adil bubaker\",\r\n  \"client_email\": \"adilKV@gmail.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/bookings/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"bookings",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get My Bookings",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-Timezone",
+						"value": "America/New_York",
+						"type": "text"
+					},
+					{
+						"key": "X-Timezone",
+						"value": "Asia/Kolkata",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/bookings/?email={{client_email}}\n",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"bookings",
+						""
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "{{client_email}}\n"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
