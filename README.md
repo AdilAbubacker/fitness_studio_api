@@ -1,6 +1,6 @@
 # 🧘 Fitness Studio Booking API
 
-A timezone-aware, concurrency-safe class booking system built with Django + Django REST Framework. Users can browse sessions (e.g. Yoga, Zumba), view instructors, and book available time slots without worrying about over-booking or timezone mismatches.
+A timezone-aware, concurrency-safe fitness class booking system built with Django + Django REST Framework. Users can browse sessions (e.g. Yoga, Zumba), view instructors, and book available time slots without worrying about over-booking or timezone mismatches.
 
 ---
 
@@ -20,7 +20,7 @@ A timezone-aware, concurrency-safe class booking system built with Django + Djan
 - **Backend**: Django 5.2, Django REST Framework
 - **Database**: SQLite (for simplicity)
 - **Timezone Handling**: Full support using `pytz` + `X-Timezone` header
-- **Concurrency Safety**: PostgreSQL-style atomic slot decrement (`F()` + `CheckConstraint`)
+- **Concurrency Safety**: DB constraints, transactions and atomic slot decrement (`F()` + `Updte`)
 
 ---
 
