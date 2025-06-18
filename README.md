@@ -35,7 +35,7 @@ Import this in Postman to test all endpoints:
 ## 🚀 Getting Started
 
 ```bash
-git clone https://github.com/AdilAbubacker/django-booking-api.git
+git clone https://github.com/AdilAbubacker/fitness_studio_api.git
 cd django-booking-api
 
 python -m venv .venv
