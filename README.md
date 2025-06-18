@@ -18,8 +18,8 @@ A timezone-aware, concurrency-safe fitness class booking system built with Djang
 ## ⚙️ Tech Stack
 
 - **Backend**: Django 5.2, Django REST Framework
-- **Database**: SQLite (for simplicity)
-- **Timezone Handling**: Full support using `pytz` + `X-Timezone` header
+- **Database**: SQLite3 
+- **Timezone Handling**: `pytz` + `X-Timezone` header
 - **Concurrency Safety**: DB constraints, transactions and atomic slot decrement (`F()` + `Updte`)
 
 ---
